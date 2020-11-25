@@ -92,6 +92,7 @@ public class TestDataWithClientTest {
     td.update(td.flag("flag").on(false));
     td.update(td.flag("flag").on(true));
 
+    // Assertion fails on line 97
     try (LDClient client = new LDClient(SDK_KEY, config)) {
       assertThat(client.boolVariation("flag", new LDUser.Builder("user1").name("Lucy").build(), false), is(true));
       assertThat(client.boolVariation("flag", new LDUser.Builder("user2").name("Mina").build(), false), is(true));

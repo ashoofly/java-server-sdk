@@ -78,6 +78,28 @@ public class TestDataWithClientTest {
   }
 
   @Test
+  public void rulesPersistAfterTogglingFlagOffAndOn() throws Exception {
+    td.update(td.flag("flag").fallthroughVariation(false)
+            .ifMatch(UserAttribute.NAME, LDValue.of("Lucy")).thenReturn(true)
+            .ifMatch(UserAttribute.NAME, LDValue.of("Mina")).thenReturn(true));
+
+    try (LDClient client = new LDClient(SDK_KEY, config)) {
+      assertThat(client.boolVariation("flag", new LDUser.Builder("user1").name("Lucy").build(), false), is(true));
+      assertThat(client.boolVariation("flag", new LDUser.Builder("user2").name("Mina").build(), false), is(true));
+      assertThat(client.boolVariation("flag", new LDUser.Builder("user3").name("Quincy").build(), false), is(false));
+    }
+
+    td.update(td.flag("flag").on(false));
+    td.update(td.flag("flag").on(true));
+
+    try (LDClient client = new LDClient(SDK_KEY, config)) {
+      assertThat(client.boolVariation("flag", new LDUser.Builder("user1").name("Lucy").build(), false), is(true));
+      assertThat(client.boolVariation("flag", new LDUser.Builder("user2").name("Mina").build(), false), is(true));
+      assertThat(client.boolVariation("flag", new LDUser.Builder("user3").name("Quincy").build(), false), is(false));
+    }
+  }
+
+  @Test
   public void nonBooleanFlags() throws Exception {
     td.update(td.flag("flag").variations(LDValue.of("red"), LDValue.of("green"), LDValue.of("blue"))
         .offVariation(0).fallthroughVariation(2)

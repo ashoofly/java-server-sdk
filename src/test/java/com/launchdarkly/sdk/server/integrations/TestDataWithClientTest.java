@@ -65,6 +65,25 @@ public class TestDataWithClientTest {
   }
 
   @Test
+  public void targetsPersistAfterTogglingFlagOffAndOn() throws Exception {
+    td.update(td.flag("flag").fallthroughVariation(false).variationForUser("user1", true));
+
+    try (LDClient client = new LDClient(SDK_KEY, config)) {
+      assertThat(client.boolVariation("flag", new LDUser("user1"), false), is(true));
+      assertThat(client.boolVariation("flag", new LDUser("user2"), false), is(false));
+    }
+
+    td.update(td.flag("flag").on(false));
+    td.update(td.flag("flag").on(true));
+
+    // These assertions DO pass, unlike the ones for the rules
+    try (LDClient client = new LDClient(SDK_KEY, config)) {
+      assertThat(client.boolVariation("flag", new LDUser("user1"), false), is(true));
+      assertThat(client.boolVariation("flag", new LDUser("user2"), false), is(false));
+    }
+  }
+
+  @Test
   public void usesRules() throws Exception {
     td.update(td.flag("flag").fallthroughVariation(false)
         .ifMatch(UserAttribute.NAME, LDValue.of("Lucy")).thenReturn(true)
